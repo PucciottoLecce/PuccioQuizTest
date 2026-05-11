@@ -484,9 +484,8 @@
       }
     };
 
-    // Crea il client Supabase - risolve duplicazione
-    const { createClient } = supabase;
-    const supabaseClient = createClient(SUPABASE_CONFIG.URL, SUPABASE_CONFIG.ANON_KEY);
+    // Crea il client Supabase - importazione diretta
+    const supabaseClient = supabase.createClient(SUPABASE_CONFIG.URL, SUPABASE_CONFIG.ANON_KEY);
 
     // Funzioni API per il frontend
     window.SupabaseAPI = {
