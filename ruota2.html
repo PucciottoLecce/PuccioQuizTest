@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruota della Fortuna - Grand Opening</title>
+    <script src="audio-manager.js"></script>
+    <style>
+        /* === RESET & IMPORT FONTS === */
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap');
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #0d0d0d;
+            color: #ffffff;
+            font-family: 'Montserrat', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding: 20px;
+        }
+
+        /* === TYPOGRAPHY === */
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            margin-top: 20px;
+        }
+
+        h1 {
+            color: #b3002d; /* Bordeaux luminoso */
+            font-size: 3rem;
+            text-transform: uppercase;
+            text-shadow: 0 0 15px rgba(179, 0, 45, 0.5);
+            margin-bottom: 10px;
+            font-weight: 900;
+        }
+
+        h2 {
+            font-size: 1.2rem;
+            color: #cccccc;
+            font-weight: 400;
+        }
+
+        /* === WHEEL CONTAINER === */
+        .game-area {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .wheel-wrapper {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            margin-bottom: 30px;
+            border-radius: 50%;
+            box-shadow: 0 0 30px rgba(128, 0, 32, 0.6);
+            border: 8px solid #33000d;
+            overflow: visible;
+        }
+
+        /* Il Puntatore */
+        .pointer {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-top: 45px solid #d4af37;
+            z-index: 10;
+            filter: drop-shadow(0 5px 5px rgba(0,0,0,0.8));
+        }
+
+        /* Canvas della Ruota */
+        canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            transition: transform 6s cubic-bezier(0.15, 0.85, 0.15, 1);
+        }
+
+        /* Logo al centro della ruota - GIRA CON LA RUOTA */
+        .logo-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 120px;
+            height: 120px;
+            margin-top: -60px;
+            margin-left: -60px;
+            z-index: 9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            padding: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.8), 0 0 25px rgba(0, 0, 0, 0.5);
+            border: 4px solid #000000;
+            border-radius: 50%;
+            transition: transform 6s cubic-bezier(0.15, 0.85, 0.15, 1);
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .logo-center img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: brightness(1.3) invert(1) hue-rotate(40deg) saturate(1.5);
+        }
+
+        /* === BUTTON === */
+        button {
+            background: linear-gradient(135deg, #800020, #4a0012);
+            color: white;
+            border: 2px solid #b3002d;
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            transition: all 0.2s ease;
+        }
+
+        button:hover:not(:disabled) {
+            transform: scale(1.05);
+            background: linear-gradient(135deg, #b3002d, #800020);
+        }
+
+        button:disabled {
+            background: #333;
+            border-color: #555;
+            color: #888;
+            cursor: not-allowed;
+            transform: scale(1);
+        }
+
+        /* === MODAL (POP-UP) === */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            background: #111;
+            border: 3px solid #800020;
+            border-radius: 15px;
+            padding: 40px;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 0 50px rgba(128, 0, 32, 0.4);
+            transform: scale(0.8);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-title {
+            color: #d4af37;
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .modal-text {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .token-box {
+            background: #222;
+            padding: 10px;
+            border: 1px dashed #d4af37;
+            font-family: monospace;
+            font-size: 1.5rem;
+            color: #d4af37;
+            margin: 20px 0;
+            letter-spacing: 5px;
+        }
+
+        .restriction-message {
+            text-align: center;
+            padding: 40px;
+            color: #cccccc;
+            background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
+            border-radius: 20px;
+            border: 2px solid #555;
+        }
+
+        .restriction-message h2 {
+            color: #b3002d;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+
+        @media (max-width: 500px) {
+            .wheel-wrapper {
+                width: 320px;
+                height: 320px;
+            }
+            .logo-center {
+                width: 90px;
+                height: 90px;
+                margin-top: -45px;
+                margin-left: -45px;
+            }
+            h1 { font-size: 2.5rem; }
+            h2 { font-size: 1rem; }
+            button {
+                padding: 12px 24px;
+                font-size: 1.2rem;
+            }
+            .modal-content {
+                padding: 25px;
+                margin: 20px;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Gira la Ruota!</h1>
+        <h2>Tenta la fortuna: fantastici premi ti aspettano.</h2>
+    </div>
+
+    <div class="game-area" id="gameArea">
+        <div class="wheel-wrapper">
+            <div class="pointer"></div>
+            <canvas id="wheelCanvas" width="800" height="800"></canvas>
+            
+            <!-- Logo al centro - GIRA CON LA RUOTA SUL POSTO -->
+            <div class="logo-center" id="logoCenterContainer">
+                <img src="https://raw.githubusercontent.com/pucciottol/puccio-assets/main/Logo%20Pucciotto.svg" alt="Logo Pucciotto">
+            </div>
+        </div>
+        <button id="spinBtn">Gira Ora</button>
+    </div>
+
+    <!-- Pop-up dei risultati -->
+    <div class="modal-overlay" id="resultModal">
+        <div class="modal-content">
+            <h2 class="modal-title" id="modalTitle">Risultato</h2>
+            <div id="modalBody"></div>
+            <button id="closeModalBtn" style="margin-top: 20px; font-size: 1rem; padding: 10px 25px;">Chiudi</button>
+        </div>
+    </div>
+
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Configurazione Supabase -->
+    <script src="supabase-config.js"></script>
+    <!-- EmailJS Service -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script src="email-service.js"></script>
+    <!-- Configurazione principale -->
+    <script src="config.js"></script>
+    <script>
+        // Get email and IP
+        const urlParams = new URLSearchParams(window.location.search);
+        const userEmail = urlParams.get('email') || '';
+        let userIP = '';
+
+        // === CONFIGURAZIONE DATI ===
+        // Probabilità corrette: 10% Pucciotto, 5% Maglietta, 45% Crocchettone, 40% Portachiavi
+        // Alternazione precisa di premi e colori
+        const baseSlicesConfig = [
+            { name: "Crocchettone", color: "#800020", textColor: "#ffffff" }, // 1 - rosso
+            { name: "Portachiavi", color: "#000000", textColor: "#ffffff" }, // 2 - nero
+            { name: "Crocchettone", color: "#800020", textColor: "#ffffff" }, // 3 - rosso
+            { name: "Pucciotto", color: "#000000", textColor: "#d4af37" }, // 4 - nero
+            { name: "Crocchettone", color: "#800020", textColor: "#ffffff" }, // 5 - rosso
+            { name: "Portachiavi", color: "#000000", textColor: "#ffffff" }, // 6 - nero
+            { name: "Crocchettone", color: "#800020", textColor: "#ffffff" }, // 7 - rosso
+            { name: "Portachiavi", color: "#000000", textColor: "#ffffff" }, // 8 - nero
+            { name: "Crocchettone", color: "#800020", textColor: "#ffffff" }, // 9 - rosso
+            { name: "Portachiavi", color: "#000000", textColor: "#ffffff" }, // 10 - nero
+            { name: "Crocchettone", color: "#800020", textColor: "#ffffff" }, // 11 - rosso
+            { name: "Portachiavi", color: "#000000", textColor: "#ffffff" }, // 12 - nero
+            { name: "Crocchettone", color: "#800020", textColor: "#ffffff" }, // 13 - rosso
+            { name: "Portachiavi", color: "#000000", textColor: "#ffffff" }, // 14 - nero
+            { name: "Crocchettone", color: "#800020", textColor: "#ffffff" }, // 15 - rosso
+            { name: "Portachiavi", color: "#000000", textColor: "#ffffff" }, // 16 - nero
+            { name: "Crocchettone", color: "#800020", textColor: "#ffffff" }, // 17 - rosso
+            { name: "Pucciotto", color: "#000000", textColor: "#d4af37" }, // 18 - nero
+            { name: "Portachiavi", color: "#800020", textColor: "#ffffff" }, // 19 - rosso
+            { name: "Maglietta", color: "#000000", textColor: "#d4af37" }  // 20 - nero
+        ];
+
+        // Usa la sequenza precisa senza mescolamento per mantenere l'alternanza
+        const slicesConfig = baseSlicesConfig;
+
+        const totalSlices = slicesConfig.length;
+        const sliceAngle = 360 / totalSlices;
+
+        // === VARIABILI GLOBALI ===
+        let canvas, ctx, spinBtn, resultModal, modalTitle, modalBody, closeModalBtn, logoCenterContainer;
+        let currentRotation = 0;
+        let isSpinning = false;
+
+        // === FUNZIONI DI INIZIALIZZAZIONE ===
+        function initializeDOM() {
+            try {
+                canvas = document.getElementById("wheelCanvas");
+                ctx = canvas ? canvas.getContext("2d") : null;
+                spinBtn = document.getElementById("spinBtn");
+                resultModal = document.getElementById("resultModal");
+                modalTitle = document.getElementById("modalTitle");
+                modalBody = document.getElementById("modalBody");
+                closeModalBtn = document.getElementById("closeModalBtn");
+                logoCenterContainer = document.getElementById("logoCenterContainer");
+
+                if (!canvas || !ctx || !spinBtn) {
+                    console.error('ERRORE: Elementi DOM non trovati');
+                    return false;
+                }
+
+                console.log('DEBUG: Elementi DOM inizializzati correttamente');
+                return true;
+            } catch (e) {
+                console.error('ERRORE nell\'inizializzazione DOM:', e);
+                return false;
+            }
+        }
+
+        // === FUNZIONI DI DISEGNO ===
+        function drawWheel() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = centerX;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = 0; i < totalSlices; i++) {
+                const startAngle = (i * sliceAngle - 90) * (Math.PI / 180);
+                const endAngle = ((i + 1) * sliceAngle - 90) * (Math.PI / 180);
+
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                ctx.closePath();
+                ctx.fillStyle = slicesConfig[i].color;
+                ctx.fill();
+                
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = "#33000d";
+                ctx.stroke();
+
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(startAngle + (sliceAngle / 2) * (Math.PI / 180));
+                ctx.textAlign = "right";
+                ctx.textBaseline = "middle";
+                ctx.fillStyle = slicesConfig[i].textColor;
+                ctx.font = "bold 28px Montserrat, sans-serif";
+                ctx.fillText(slicesConfig[i].name, radius - 40, 0);
+                ctx.restore();
+            }
+        }
+
+        // === LOGICA DEL GIOCO E CALCOLI ===
+        function generateToken() {
+            return Math.random().toString(36).substring(2, 8).toUpperCase();
+        }
+
+        function spinWheel() {
+            if (isSpinning) return;
+            isSpinning = true;
+            spinBtn.disabled = true;
+            
+            // Inizia suono rotazione ruota
+            if (window.audioManager) {
+                window.audioManager.startWheelSpin();
+            }
+
+            currentRotation = currentRotation + (360 - (currentRotation % 360));
+
+            const winningIndex = Math.floor(Math.random() * totalSlices);
+            const sliceCenterDegree = winningIndex * sliceAngle + (sliceAngle / 2);
+            
+            const extraSpins = 360 * 8; 
+            const targetRotation = currentRotation + extraSpins + (360 - sliceCenterDegree);
+
+            currentRotation = targetRotation;
+            canvas.style.transform = `rotate(${currentRotation}deg)`;
+            // Logo gira con la ruota mantenendo la posizione centrale
+            logoCenterContainer.style.transform = `rotate(${currentRotation}deg)`;
+
+            canvas.addEventListener('transitionend', function handleTransitionEnd() {
+                canvas.removeEventListener('transitionend', handleTransitionEnd);
+                
+                // Ferma suono rotazione ruota
+                if (window.audioManager) {
+                    window.audioManager.stopWheelSpin();
+                }
+                
+                // Mostra risultato e suona vincita
+                const prizeName = slicesConfig[winningIndex].name;
+                showResult(prizeName);
+                
+                // Suona suono vincita
+                if (window.audioManager) {
+                    window.audioManager.playWinSound(prizeName);
+                }
+                
+                isSpinning = false;
+                // NON riabilitare il pulsante - la ruota è bloccata dopo una vincita
+                spinBtn.disabled = true;
+                spinBtn.textContent = 'Gioco Completato';
+                spinBtn.style.backgroundColor = '#cccccc';
+                spinBtn.style.cursor = 'not-allowed';
+            });
+        }
+
+        // === MESSAGGISTICA / RISULTATI ===
+        async function showResult(prizeName) {
+            const token = generateToken();
+            const timestamp = new Date().toISOString();
+
+            if (prizeName === "Nulla") {
+                modalTitle.textContent = "Peccato!";
+                modalTitle.style.color = "#cccccc";
+                modalBody.innerHTML = `
+                    <p class="modal-text">Non hai vinto questa volta!<br><br>
+                    Ma ti aspettiamo comunque al nostro locale in occasione della nostra apertura per festeggiare insieme!</p>
+                    <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px;">
+                        <p style="margin: 0; font-size: 14px; color: #856404;">
+                            <strong>🎮 Gioco completato!</strong><br>
+                            Hai utilizzato la tua unica opportunità di vincita. Grazie per aver partecipato al PuccioQuiz!
+                        </p>
+                    </div>
+                    <p style="font-size: 12px; color: #888; margin-top: 15px;">La tua email di registrazione: ${userEmail}</p>
+                `;
+            } else {
+                modalTitle.textContent = "🎉 Hai Vinto! 🎉";
+                modalBody.innerHTML = `
+                    <div style="text-align: center;">
+                        <h3 style="color: #d4af37; margin-bottom: 15px;">🎉 Complimenti! Hai vinto: ${prizeName}</h3>
+                        <p style="margin-bottom: 20px; font-size: 16px;">Per ritirare il tuo premio, contattaci:</p>
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border: 2px solid #800020;">
+                            <p style="font-size: 18px; font-weight: bold; color: #800020; margin: 0;">
+                                📧 info@puccioquiz.it
+                            </p>
+                            <p style="font-size: 14px; color: #666; margin: 10px 0 0 0;">
+                                Indica il tuo premio: ${prizeName}
+                            </p>
+                        </div>
+                        <p style="font-size: 14px; color: #666;">Risponderemo il prima possibile per confermare la tua vincita!</p>
+                        <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px;">
+                            <p style="margin: 0; font-size: 14px; color: #856404;">
+                                <strong>🎮 Gioco completato!</strong><br>
+                                Hai utilizzato la tua unica opportunità di vincita. Grazie per aver partecipato al PuccioQuiz!
+                            </p>
+                        </div>
+                        <p style="font-size: 12px; color: #888; margin-top: 15px;">La tua email di registrazione: ${userEmail}</p>
+                    </div>
+                `;
+                
+                // Salva il risultato nel database e invia email
+                const spinResult = Math.floor(Math.random() * 360);
+                
+                try {
+                    // Tenta di salvare con il nuovo sistema
+                    const saveResult = await SupabaseAPI.saveWheelResult(userEmail, prizeName, spinResult);
+                    console.log('DEBUG: Risultato salvataggio:', saveResult);
+                    
+                    if (saveResult.success) {
+                        console.log('DEBUG: Risultato salvato con successo');
+                        
+                        // Invia email reale al vincitore
+                        try {
+                            const emailResult = await EmailService.sendRealPrizeEmail(userEmail, prizeName, saveResult.token);
+                            console.log('DEBUG: Risultato invio email:', emailResult);
+                            
+                            // Aggiorna il modal per confermare salvataggio e invio email
+                            setTimeout(() => {
+                                const emailStatus = emailResult.success ? 
+                                    `<p style="color: #28a745; font-weight: bold;">✅ Email inviata con successo!</p>` :
+                                    `<p style="color: #ffc107; font-weight: bold;">⚠️ ${emailResult.message}</p>`;
+                                
+                                modalBody.innerHTML += `
+                                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
+                                        <p style="color: #28a745; font-weight: bold;">✅ Vincita registrata con successo!</p>
+                                        <p style="font-size: 12px; color: #666;">Abbiamo salvato la tua vincita nel nostro sistema.</p>
+                                        ${emailStatus}
+                                        <p style="font-size: 12px; color: #666;">${emailResult.simulated ? '(Email simulata - in attesa propagazione DNS Resend)' : 'Controlla la tua casella email!'}</p>
+                                    </div>
+                                `;
+                            }, 1000);
+                            
+                        } catch (emailError) {
+                            console.error('DEBUG: Errore invio email:', emailError);
+                            
+                            // Fallback: mostra solo salvataggio database
+                            setTimeout(() => {
+                                modalBody.innerHTML += `
+                                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
+                                        <p style="color: #28a745; font-weight: bold;">✅ Vincita registrata con successo!</p>
+                                        <p style="font-size: 12px; color: #666;">Abbiamo salvato la tua vincita nel nostro sistema.</p>
+                                        <p style="color: #ffc107; font-weight: bold;">⚠️ Email non inviata - contattaci direttamente</p>
+                                    </div>
+                                `;
+                            }, 1000);
+                        }
+                    } else {
+                        console.error('DEBUG: Errore salvataggio risultato:', saveResult.error);
+                        console.log('DEBUG: Dettagli errore:', JSON.stringify(saveResult, null, 2));
+                        modalBody.innerHTML += `
+                            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
+                                <p style="color: #dc3545;">⚠️ Errore registrazione vincita.</p>
+                                <p style="font-size: 12px; color: #666;">Contattaci comunque a info@puccioquiz.it per ritirare il premio.</p>
+                                <p style="font-size: 12px; color: #666;">Premio vinto: ${prizeName}</p>
+                                <p style="font-size: 10px; color: #888;">Errore DB: ${saveResult.error}</p>
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    console.error('DEBUG: Eccezione durante salvataggio:', error);
+                    modalBody.innerHTML += `
+                        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
+                            <p style="color: #dc3545;">⚠️ Errore sistema premi.</p>
+                            <p style="font-size: 12px; color: #666;">Contattaci a info@puccioquiz.it per ritirare il premio.</p>
+                            <p style="font-size: 12px; color: #666;">Premio vinto: ${prizeName}</p>
+                        </div>
+                    `;
+                }
+            }
+            
+            resultModal.classList.add("active");
+        }
+
+        async function saveWheelResult(email, ip, prize, token, timestamp) {
+            try {
+                await callBackend('saveWheelResult', {
+                    email,
+                    ip,
+                    prize,
+                    token,
+                    timestamp
+                });
+            } catch (e) {
+                console.error('Failed to save wheel result:', e);
+            }
+        }
+
+        // === INIZIALIZZAZIONE ===
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('DEBUG: DOM caricato, inizializzo ruota');
+            
+            if (!initializeDOM()) {
+                console.error('ERRORE CRITICO: Impossibile inizializzare elementi DOM');
+                const gameArea = document.getElementById('gameArea');
+                if (gameArea) {
+                    gameArea.innerHTML = `
+                        <div class="restriction-message">
+                            <h2>⚠️ Errore di Caricamento</h2>
+                            <p>Impossibile caricare la ruota. Ricarica la pagina e riprova.</p>
+                        </div>
+                    `;
+                }
+                return;
+            }
+            
+            // Inizializzo disegnando la ruota solo dopo che le variabili sono definite
+            drawWheel();
+            
+            try {
+                const response = await fetch('https://api.ipify.org?format=json');
+                const data = await response.json();
+                userIP = data.ip;
+            } catch (e) {
+                console.warn('Could not fetch IP:', e);
+                userIP = 'unknown';
+            }
+
+            // Controlla se l'utente può girare la ruota (sistema anti-frode con bypass)
+            async function checkWheelEligibility() {
+                console.log('DEBUG: Inizio controllo eleggibilità ruota per email:', userEmail);
+                
+                if (!userEmail) {
+                    console.log('DEBUG: Nessuna email fornita');
+                    return { eligible: false, reason: 'Email mancante' };
+                }
+                
+                try {
+                    // BYPASS TEMPORANEO: Permetti sempre l'accesso per testare
+                    // TODO: Rimuovere questo bypass dopo aver aggiornato il database
+                    console.log('DEBUG: BYPASS ATTIVO - Permetto accesso per test');
+                    return { eligible: true };
+                    
+                    // Codice anti-frode commentato temporaneamente
+                    /*
+                    // Prima controlla se l'email ha già vinto un premio
+                    const prizeCheck = await SupabaseAPI.checkEmailPrize(userEmail);
+                    console.log('DEBUG: Risposta controllo premi email:', prizeCheck);
+                    
+                    if (prizeCheck.success && prizeCheck.prizes && prizeCheck.prizes.length > 0) {
+                        const lastPrize = prizeCheck.prizes[prizeCheck.prizes.length - 1];
+                        console.log('DEBUG: Email ha già vinto:', lastPrize.prize);
+                        showRestrictionMessage(`Hai già vinto un premio: ${lastPrize.prize}. Una sola vincita per email è consentita.`);
+                        return { eligible: false, reason: 'Email già vincitore' };
+                    }
+                    
+                    // Poi controlla l'eleggibilità standard per la ruota
+                    const result = await SupabaseAPI.checkWheelEligibility(userEmail);
+                    console.log('DEBUG: Risposta controllo eleggibilità ruota:', result);
+                    
+                    if (result.eligible) {
+                        console.log('DEBUG: Utente eleggibile per girare la ruota');
+                        return { eligible: true };
+                    } else {
+                        console.log('DEBUG: Utente non eleggibile:', result.reason);
+                        showRestrictionMessage(result.reason);
+                        return { eligible: false, reason: result.reason };
+                    }
+                    */
+                } catch (error) {
+                    console.error('DEBUG: Errore controllo eleggibilità ruota:', error);
+                    console.log('DEBUG: BYPASS SU ERRORE - Permetto accesso per test');
+                    return { eligible: true };
+                }
+            }
+
+            const eligibilityResult = await checkWheelEligibility();
+            if (!eligibilityResult.eligible) {
+                return;
+            }
+
+            // Check eligibility
+            checkWheelEligibility(userEmail, userIP);
+            
+            // Event listeners
+            spinBtn.addEventListener("click", spinWheel);
+            closeModalBtn.addEventListener("click", () => {
+                resultModal.classList.remove("active");
+            });
+        });
+
+        async function checkWheelEligibility(email, ip) {
+            try {
+                const response = await callBackend('saveWheelResult', {
+                    action: 'checkWheelEligibility',
+                    email,
+                    ip
+                });
+
+                if(response.error) {
+                    showRestrictionMessage('Errore nel controllo dell\'accesso. Contatta l\'amministratore.');
+                    return;
+                }
+
+                if(response.wheelAlreadyUsed) {
+                    if(response.reason === 'same_email') {
+                        showRestrictionMessage('La ruota è già stata utilizzata con questa email. Una ruota per email è consentita.');
+                    } else if(response.reason === 'same_ip') {
+                        showRestrictionMessage('La ruota è già stata utilizzata da questo dispositivo. Una ruota per dispositivo è consentita.');
+                    }
+                }
+            } catch (e) {
+                showRestrictionMessage('Errore: ' + e.message);
+            }
+        }
+
+        function showRestrictionMessage(message) {
+            const gameArea = document.getElementById('gameArea');
+            gameArea.innerHTML = `
+                <div class="restriction-message">
+                    <h2>⚠️ Accesso Negato</h2>
+                    <p>${message}</p>
+                    <p style="margin-top: 20px; font-size: 0.9rem; color: #888;">
+                        Se ritieni che sia un errore, contatta il supporto.
+                    </p>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

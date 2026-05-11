@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PuccioQuiz — Esito</title>
+  <style>
+    :root{
+      --bg:#070707;
+      --card:#0f0f10;
+      --accent1:#ff3b3b;
+      --accent2:#9caf88;
+      --muted:#bfc8bf;
+      --glass: rgba(255,255,255,0.03);
+      --radius:14px;
+      --shadow: 0 20px 60px rgba(0,0,0,0.7);
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    html,body{
+      height:100%;
+      margin:0;
+      background:
+        radial-gradient(800px 400px at 10% 10%, rgba(156,175,136,0.04), transparent 8%),
+        radial-gradient(700px 350px at 90% 90%, rgba(255,59,59,0.03), transparent 8%),
+        linear-gradient(180deg,var(--bg),#040404);
+      color:#eef2ea;
+      -webkit-font-smoothing:antialiased;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+    }
+
+    .lose-wrap{
+      width:100%;
+      max-width:920px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius: calc(var(--radius) + 6px);
+      box-shadow: var(--shadow);
+      padding:28px;
+      box-sizing:border-box;
+      border:1px solid rgba(255,255,255,0.03);
+      display:grid;
+      grid-template-columns: 1fr 360px;
+      gap:20px;
+      align-items:start;
+    }
+
+    .lose-card{
+      background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
+      border-radius:12px;
+      padding:20px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+      border:1px solid rgba(255,255,255,0.02);
+    }
+
+    .badge{
+      display:inline-block;
+      padding:8px 12px;
+      border-radius:999px;
+      background: linear-gradient(90deg,var(--accent1),var(--accent2));
+      color:#081226;
+      font-weight:800;
+      font-size:13px;
+      margin-bottom:12px;
+    }
+
+    h2{
+      margin:6px 0 8px 0;
+      font-size:22px;
+      color:#fff;
+      letter-spacing:-0.3px;
+    }
+
+    p.lead{
+      margin:0 0 14px 0;
+      color:var(--muted);
+      font-size:15px;
+      line-height:1.45;
+    }
+
+    .icon{
+      width:84px;
+      height:84px;
+      border-radius:20px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border:1px solid rgba(255,255,255,0.03);
+      margin-bottom:12px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.45);
+    }
+    .icon svg{ filter: drop-shadow(0 6px 18px rgba(0,0,0,0.5)); }
+
+    .miss-list{
+      margin-top:12px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .miss-item{
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      padding:10px;
+      border-radius:10px;
+      background: rgba(255,255,255,0.01);
+      border:1px solid rgba(255,255,255,0.02);
+    }
+    .miss-index{
+      min-width:36px;
+      height:36px;
+      border-radius:8px;
+      background: rgba(255,59,59,0.08);
+      color:var(--accent1);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:800;
+    }
+    .miss-body{ flex:1; }
+    .miss-body .q{ font-weight:700; color:#fff; margin-bottom:6px; }
+    .miss-body .your{ color:#ffb3b3; font-size:13px; }
+    .miss-body .corr{ color:var(--accent2); font-size:13px; margin-top:6px; }
+
+    .side{
+      padding:18px;
+      border-radius:12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01));
+      border:1px solid rgba(255,255,255,0.02);
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .side h4{ margin:0 0 8px 0; color:#fff; font-size:16px; }
+    .side p{ margin:0 0 12px 0; color:var(--muted); font-size:14px; }
+
+    .actions{ display:flex; flex-direction:column; gap:10px; margin-top:8px; }
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      padding:12px 14px;
+      border-radius:12px;
+      border:none;
+      cursor:pointer;
+      font-weight:800;
+      color:#081226;
+      background: linear-gradient(90deg,var(--accent2),var(--accent1));
+      box-shadow: 0 12px 36px rgba(255,59,59,0.12);
+      text-decoration:none;
+    }
+    .btn.secondary{
+      background: transparent;
+      color: #eaf2ea;
+      border:1px solid rgba(255,255,255,0.06);
+      font-weight:700;
+      box-shadow:none;
+    }
+    .btn.ghost{
+      background: transparent;
+      color: var(--muted);
+      border:1px dashed rgba(255,255,255,0.04);
+      font-weight:700;
+    }
+
+    .small-note{ margin-top:12px; color:var(--muted); font-size:13px; }
+
+    @media (max-width:880px){
+      .lose-wrap{ grid-template-columns: 1fr; padding:18px; }
+      .side{ order:2; }
+    }
+  </style>
+</head>
+<body>
+  <div class="lose-wrap" role="dialog" aria-labelledby="lose-title" aria-describedby="lose-desc">
+    <div class="lose-card">
+      <div class="icon" aria-hidden="true">
+        <svg width="56" height="56" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0.5" y="0.5" width="23" height="23" rx="6.5" stroke="rgba(255,255,255,0.04)"/>
+          <path d="M8 9.5C8.55228 9.5 9 9.05228 9 8.5C9 7.94772 8.55228 7.5 8 7.5C7.44772 7.5 7 7.94772 7 8.5C7 9.05228 7.44772 9.5 8 9.5Z" fill="#ffb3b3"/>
+          <path d="M16 9.5C16.5523 9.5 17 9.05228 17 8.5C17 7.94772 16.5523 7.5 16 7.5C15.4477 7.5 15 7.94772 15 8.5C15 9.05228 15.4477 9.5 16 9.5Z" fill="#ffb3b3"/>
+          <path d="M8.5 15.5C9.66667 14 14.3333 14 15.5 15.5" stroke="#ffb3b3" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+      </div>
+
+      <div class="badge">PuccioQuiz</div>
+      <h2 id="lose-title">Peccato — non questa volta</h2>
+      <p id="lose-desc" class="lead">Non hai risposto correttamente a tutte le domande richieste per accedere alla ruota della fortuna. Non è prevista una seconda possibilità online, ma ti invitiamo a venire all'apertura del locale per partecipare di persona e scoprire tutte le sorprese.</p>
+
+      <div class="miss-list" id="missList" aria-live="polite">
+        <!-- elementi inseriti dinamicamente -->
+      </div>
+    </div>
+
+    <aside class="side" aria-labelledby="side-title">
+      <h4 id="side-title">Cosa succede ora</h4>
+      <p>Hai perso l'accesso alla ruota online per questa sessione. Ti aspettiamo all'apertura del locale: porta la tua voglia di divertirti e scoprirai gadget, assaggi e altre sorprese.</p>
+
+      <div class="actions">
+        <button class="btn secondary" id="reviewBtn" type="button">Rivedi le risposte sbagliate</button>
+        <button class="btn ghost" id="shareBtn" type="button">Condividi con un amico</button>
+        <a class="btn" id="visitBtn" href="#" role="button">Vieni all'apertura</a>
+      </div>
+
+      <div class="small-note" id="emailNote">Email registrata: <strong id="userEmail">—</strong></div>
+    </aside>
+  </div>
+
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Configurazione Supabase -->
+  <script src="supabase-config.js"></script>
+  <!-- Configurazione principale -->
+  <script src="config.js"></script>
+  <script>
+    (function(){
+      const missListEl = document.getElementById('missList');
+      const userEmailEl = document.getElementById('userEmail');
+      const reviewBtn = document.getElementById('reviewBtn');
+      const shareBtn = document.getElementById('shareBtn');
+      const visitBtn = document.getElementById('visitBtn');
+
+      // Get email and missed answers from URL and sessionStorage
+      const urlParams = new URLSearchParams(window.location.search);
+      const email = urlParams.get('email') || sessionStorage.getItem('userEmail') || '';
+      const missedAnswersStr = sessionStorage.getItem('missedAnswers');
+      const missedAnswers = missedAnswersStr ? JSON.parse(missedAnswersStr) : [];
+
+      // Default actions
+      reviewBtn.addEventListener('click', () => {
+        const first = missListEl.querySelector('.miss-item');
+        if(first) first.scrollIntoView({behavior:'smooth', block:'center'});
+      });
+
+      shareBtn.addEventListener('click', () => {
+        const text = "Sto partecipando a PuccioQuiz! Vieni anche tu all'apertura per provare la ruota della fortuna.";
+        if(navigator.share){
+          navigator.share({ title: 'PuccioQuiz', text }).catch(()=>{});
+        } else {
+          navigator.clipboard?.writeText(text).then(()=> alert('Testo copiato negli appunti. Condividilo con i tuoi amici!'));
+        }
+      });
+
+      visitBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        alert('Ti aspettiamo all\'apertura del locale — tieni d\'occhio le comunicazioni ufficiali per i dettagli.');
+      });
+
+      function escapeHtml(str){
+        if(!str && str !== 0) return '';
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+
+      function friendlyTextForKey(key){
+        const map = {
+          puccia:'Puccia', focaccia:'Focaccia', ciabatta:'Ciabatta', pane_toscano:'Pane toscano',
+          caffe_ghiaccio_mandorla:'Caffè in ghiaccio con latte di mandorla', granita:'Granita', orzo:'Orzo freddo', limonata:'Limonata',
+          friselle:'Friselle', panzanella:'Panzanella', bruschette:'Bruschette', crostini:'Crostini',
+          pasticciotto:'Pasticciotto', cartellate:'Cartellate', zeppole:'Zeppole', tiramisu:'Tiramisù',
+          pizzica:'Pizzica', tarantella:'Tarantella', samba:'Samba', valzer:'Valzer',
+          primitivo:'Primitivo', chianti:'Chianti', barolo:'Barolo', negroamaro:'Negroamaro',
+          primitivo_meat:'Primitivo (battuta)', braciole:'Braciole', agnello:'Agnello', salsiccia:'Salsiccia',
+          ricotta_fote:'Ricotta fote (scante)', pecorino:'Pecorino', caciocavallo:'Caciocavallo', mozzarella:'Mozzarella',
+          olio_evo:'Olio EVO', grano:'Grano', pomodori:'Pomodori', mandorle:'Mandorle'
+        };
+        return map[key] || key;
+      }
+
+      // Populate the lose screen
+      window.initLoseScreen = function(){
+        missListEl.innerHTML = '';
+
+        if(!Array.isArray(missedAnswers) || missedAnswers.length === 0){
+          const info = document.createElement('div');
+          info.className = 'miss-item';
+          info.innerHTML = '<div class="miss-body"><div class="q">Nessuna domanda specificata</div><div class="your">Riprova il quiz per vedere i dettagli (se disponibile).</div></div>';
+          missListEl.appendChild(info);
+        } else {
+          missedAnswers.forEach((item, idx) => {
+            const el = document.createElement('div');
+            el.className = 'miss-item';
+            const qTitle = [
+              'Qual è il tipico pane salentino?',
+              'Qual è la bevanda tipica estiva del Salento?',
+              'Quale piatto povero salentino si "sponza"',
+              'Qual è il dolce tradizionale più famoso del Salento?',
+              'Qual è la danza tradizionale del Salento?',
+              'Quale vino è tipico del Salento?',
+              'Qual è un piatto tipico salentino a base di carne?',
+              'Qual è un formaggio tipico del Salento dal sapore molto intenso?',
+              'Quale prodotto agricolo è simbolo del Salento?'
+            ][item.q - 1] || 'Domanda ' + item.q;
+
+            el.innerHTML = `
+              <div class="miss-index">${escapeHtml(String(item.q))}</div>
+              <div class="miss-body">
+                <div class="q">${escapeHtml(qTitle)}</div>
+                <div class="your">La tua risposta: <strong style="color:#ffd6d6">${escapeHtml(friendlyTextForKey(item.answer))}</strong></div>
+                <div class="corr">Risposta corretta: <strong style="color:var(--accent2)">${escapeHtml(friendlyTextForKey(item.correct))}</strong></div>
+              </div>
+            `;
+            missListEl.appendChild(el);
+          });
+        }
+
+        userEmailEl.textContent = email ? email : '—';
+        document.querySelector('.lose-wrap').scrollIntoView({behavior:'smooth', block:'center'});
+      };
+
+      // Initialize on page load
+      window.initLoseScreen();
+
+      // Clean up sessionStorage
+      sessionStorage.removeItem('missedAnswers');
+      sessionStorage.removeItem('userEmail');
+    })();
+  </script>
+</body>
+</html>
