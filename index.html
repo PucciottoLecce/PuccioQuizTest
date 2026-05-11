@@ -484,15 +484,16 @@
       }
     };
 
-    // Crea il client Supabase
-    const supabase = supabase.createClient(SUPABASE_CONFIG.URL, SUPABASE_CONFIG.ANON_KEY);
+    // Crea il client Supabase - risolve duplicazione
+    const { createClient } = supabase;
+    const supabaseClient = createClient(SUPABASE_CONFIG.URL, SUPABASE_CONFIG.ANON_KEY);
 
     // Funzioni API per il frontend
     window.SupabaseAPI = {
       // Controlla se l'utente ha già partecipato
       async checkEligibility(email) {
         try {
-          const { data, error } = await supabase
+          const { data, error } = await supabaseClient
             .from('quiz_participants')
             .select('email')
             .eq('email', email)
@@ -516,7 +517,7 @@
       // Salva il risultato del quiz
       async saveQuizResult(data) {
         try {
-          const { error } = await supabase
+          const { error } = await supabaseClient
             .from('quiz_participants')
             .insert([{
               email: data.email,
@@ -543,7 +544,7 @@
       // Salva il risultato della ruota
       async saveWheelResult(email, ipAddress, prize, token, timestamp) {
         try {
-          const { error } = await supabase
+          const { error } = await supabaseClient
             .from('wheel_spins')
             .insert([{
               email: email,
@@ -569,7 +570,7 @@
       async checkWheelEligibility(email, ipAddress) {
         try {
           // Controlla se l'email ha già vinto
-          const { data: emailData, error: emailError } = await supabase
+          const { data: emailData, error: emailError } = await supabaseClient
             .from('wheel_spins')
             .select('email')
             .eq('email', email)
@@ -581,7 +582,7 @@
           }
           
           // Controlla se l'IP ha già vinto
-          const { data: ipData, error: ipError } = await supabase
+          const { data: ipData, error: ipError } = await supabaseClient
             .from('wheel_spins')
             .select('ip_address')
             .eq('ip_address', ipAddress)
@@ -652,7 +653,7 @@
     // Test connessione
     (async function() {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
           .from('quiz_participants')
           .select('count')
           .limit(1);
