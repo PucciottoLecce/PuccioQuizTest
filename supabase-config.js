@@ -11,7 +11,7 @@ const SUPABASE_CONFIG = {
 const API_CONFIG = {
   BASE_URL: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
     ? 'http://localhost:3000' 
-    : 'https://puccio-quiz-win-2.vercel.app', // Backend Vercel
+    : 'https://pucciotestbackend.vercel.app', // Backend Vercel
   ENDPOINTS: {
     SAVE_WHEEL_RESULT: '/api/save-wheel-result',
     SEND_EMAIL: '/api/send-email',
